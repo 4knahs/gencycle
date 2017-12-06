@@ -1,9 +1,11 @@
 defmodule GenCycle.Recipe.GatherAllRecipe do
-  @moduledoc false
+  @moduledoc ~S"""
+  Recipe that waits on all events to conclude.
+  """
 
   require Logger
 
-  @behaviour Patata.RecipeBehavior
+  @behaviour GenCycle.RecipeBehavior
 
   def start(state, event, message, {new_ev, new_status}) do
 

@@ -1,10 +1,13 @@
 defmodule GenCycle.Recipe.GatherRecipe do
-  @moduledoc false
+  @moduledoc ~S"""
+  Recipe that waits on the occurrence of specific group of events, from a starting to an ending event.
+  If all the events are matched, it launches a new event.
+  """
 
   require Logger
   alias Gencycle
 
-  @behaviour Patata.RecipeBehavior
+  @behaviour GenCycle.RecipeBehavior
 
   def start(state, event, message,
         [{:in_event, event_start}, {:out, {new_ev, new_message}}, {:events, events}]) do

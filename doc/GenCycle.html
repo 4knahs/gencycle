@@ -8,7 +8,7 @@
     <title>GenCycle – GenCycle v0.1.0</title>
     <link rel="stylesheet" href="dist/app-c922dbe7ef.css" />
     
-    <script src="dist/sidebar_items-3fb33444b3.js"></script>
+    <script src="dist/sidebar_items-1597d1bd73.js"></script>
     
     
     
@@ -77,15 +77,14 @@
 
       
         <section id="moduledoc">
-          <h1>Under work</h1>
-<p>Documentation for Gencycle.</p>
+          <p>An event-driven task manager to design GenServer lifecycles.</p>
 <p>The recipes model applies to any process that wants to execute independent tasks (in parallel) without becoming cluttered with task logic and having a state machine of executed tasks.</p>
 <p>Recipes are wrappers for simple actions to be performed in parallel.</p>
 <p>Each action runs in a supervised task and recipes can be pipelined via events.</p>
 <p>Processes like GenServer can import the <code class="inline">RecipeManager</code> to implement the recipes model.</p>
 <h1>Creating a Recipe</h1>
 <p>Recipes lie in <code class="inline">lib/recipes</code>. To start create a new file there, e.g., <code class="inline">trace_recipe.ex</code>.</p>
-<p>First step is to tell it to follow the <code class="inline">GenCycle.RecipeBehavior</code>:</p>
+<p>First step is to tell it to follow the <a href="GenCycle.RecipeBehavior.html"><code class="inline">GenCycle.RecipeBehavior</code></a>:</p>
 <pre><code class="elixir">defmodule GenCycle.Recipe.MyRecipe do
 @moduledoc false
 
@@ -319,7 +318,7 @@ is the state to be passed to the recipe</p>
     </a>
     <span class="signature">add_recipe(state, arg, action)</span>
     
-      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L316" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L314" class="view-source" rel="help" title="View Source">
        <span class="icon-code" aria-hidden="true"></span>
        <span class="sr-only">View Source</span>
      </a>
@@ -341,7 +340,7 @@ is the state to be passed to the recipe</p>
     </a>
     <span class="signature">add_recipes(state, arg, actions)</span>
     
-      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L305" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L303" class="view-source" rel="help" title="View Source">
        <span class="icon-code" aria-hidden="true"></span>
        <span class="sr-only">View Source</span>
      </a>
@@ -363,7 +362,7 @@ is the state to be passed to the recipe</p>
     </a>
     <span class="signature">cancel_all_events(state)</span>
     
-      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L271" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L269" class="view-source" rel="help" title="View Source">
        <span class="icon-code" aria-hidden="true"></span>
        <span class="sr-only">View Source</span>
      </a>
@@ -385,7 +384,7 @@ is the state to be passed to the recipe</p>
     </a>
     <span class="signature">cancel_event(state, name)</span>
     
-      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L251" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L249" class="view-source" rel="help" title="View Source">
        <span class="icon-code" aria-hidden="true"></span>
        <span class="sr-only">View Source</span>
      </a>
@@ -407,7 +406,7 @@ is the state to be passed to the recipe</p>
     </a>
     <span class="signature">drop_events(state, arg)</span>
     
-      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L301" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L299" class="view-source" rel="help" title="View Source">
        <span class="icon-code" aria-hidden="true"></span>
        <span class="sr-only">View Source</span>
      </a>
@@ -429,7 +428,7 @@ is the state to be passed to the recipe</p>
     </a>
     <span class="signature">event_in_history?(state, event)</span>
     
-      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L215" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L213" class="view-source" rel="help" title="View Source">
        <span class="icon-code" aria-hidden="true"></span>
        <span class="sr-only">View Source</span>
      </a>
@@ -459,7 +458,7 @@ false</p>
     </a>
     <span class="signature">gather_all_events(state, event_in, event_out)</span>
     
-      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L296" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L294" class="view-source" rel="help" title="View Source">
        <span class="icon-code" aria-hidden="true"></span>
        <span class="sr-only">View Source</span>
      </a>
@@ -481,7 +480,7 @@ false</p>
     </a>
     <span class="signature">gather_events(state, events, event_start, event_out)</span>
     
-      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L280" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L278" class="view-source" rel="help" title="View Source">
        <span class="icon-code" aria-hidden="true"></span>
        <span class="sr-only">View Source</span>
      </a>
@@ -503,7 +502,7 @@ false</p>
     </a>
     <span class="signature">init_recipes(state, pid)</span>
     
-      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L179" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L177" class="view-source" rel="help" title="View Source">
        <span class="icon-code" aria-hidden="true"></span>
        <span class="sr-only">View Source</span>
      </a>
@@ -542,7 +541,7 @@ end</code></pre>
     </a>
     <span class="signature">launch_event(state, arg, return \\ :no_return)</span>
     
-      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L201" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L199" class="view-source" rel="help" title="View Source">
        <span class="icon-code" aria-hidden="true"></span>
        <span class="sr-only">View Source</span>
      </a>
@@ -576,7 +575,7 @@ end</p>
     </a>
     <span class="signature">log_recipes(recipes)</span>
     
-      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L417" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L415" class="view-source" rel="help" title="View Source">
        <span class="icon-code" aria-hidden="true"></span>
        <span class="sr-only">View Source</span>
      </a>
@@ -598,7 +597,7 @@ end</p>
     </a>
     <span class="signature">on_event(state, arg, return)</span>
     
-      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L339" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L337" class="view-source" rel="help" title="View Source">
        <span class="icon-code" aria-hidden="true"></span>
        <span class="sr-only">View Source</span>
      </a>
@@ -622,7 +621,7 @@ end</p>
     </a>
     <span class="signature">schedule_event(state, period, arg, options \\ [])</span>
     
-      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L232" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L230" class="view-source" rel="help" title="View Source">
        <span class="icon-code" aria-hidden="true"></span>
        <span class="sr-only">View Source</span>
      </a>

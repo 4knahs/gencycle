@@ -1,10 +1,8 @@
 defmodule GenCycle do
   @moduledoc """
 
-  # Under work 
+  An event-driven task manager to design GenServer lifecycles.
 
-  Documentation for Gencycle.
-  
   The recipes model applies to any process that wants to execute independent tasks (in parallel) without becoming cluttered with task logic and having a state machine of executed tasks.
 
   Recipes are wrappers for simple actions to be performed in parallel.
