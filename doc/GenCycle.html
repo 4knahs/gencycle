@@ -1,0 +1,666 @@
+    <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.18.1">
+    <title>GenCycle – GenCycle v0.1.0</title>
+    <link rel="stylesheet" href="dist/app-c922dbe7ef.css" />
+    
+    <script src="dist/sidebar_items-3fb33444b3.js"></script>
+    
+    
+    
+    
+  </head>
+  <body data-type="modules">
+    <script>try { if(localStorage.getItem('night-mode')) document.body.className += ' night-mode'; } catch (e) { }</script>
+
+    <div class="main">
+<button class="sidebar-toggle">
+  <span class="icon-menu" aria-hidden="true"></span>
+  <span class="sr-only">Toggle Sidebar</span>
+</button>
+<section class="sidebar">
+
+  
+  <a href="api-reference.html" class="sidebar-projectLink">
+    <div class="sidebar-projectDetails">
+      <h1 class="sidebar-projectName">
+        GenCycle
+      </h1>
+      <h2 class="sidebar-projectVersion">
+        v0.1.0
+      </h2>
+    </div>
+    
+  </a>
+
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button">
+      <span class="icon-search" aria-hidden="true"></span>
+    </button>
+    <input name="q" type="text" id="search-list" class="search-input" placeholder="search" aria-label="Search" autocomplete="off" />
+  </form>
+
+  <ul class="sidebar-listNav">
+    <li><a id="extras-list" href="#full-list">Pages</a></li>
+
+    
+      <li><a id="modules-list" href="#full-list">Modules</a></li>
+    
+
+    
+
+    
+  </ul>
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+
+      <h1>
+        <small class="visible-xs">GenCycle v0.1.0</small>
+        GenCycle
+        
+          <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L1" title="View Source" class="view-source" rel="help">
+            <span class="icon-code" aria-hidden="true"></span>
+            <span class="sr-only">View Source</span>
+          </a>
+        
+      </h1>
+
+      
+        <section id="moduledoc">
+          <h1>Under work</h1>
+<p>Documentation for Gencycle.</p>
+<p>The recipes model applies to any process that wants to execute independent tasks (in parallel) without becoming cluttered with task logic and having a state machine of executed tasks.</p>
+<p>Recipes are wrappers for simple actions to be performed in parallel.</p>
+<p>Each action runs in a supervised task and recipes can be pipelined via events.</p>
+<p>Processes like GenServer can import the <code class="inline">RecipeManager</code> to implement the recipes model.</p>
+<h1>Creating a Recipe</h1>
+<p>Recipes lie in <code class="inline">lib/recipes</code>. To start create a new file there, e.g., <code class="inline">trace_recipe.ex</code>.</p>
+<p>First step is to tell it to follow the <code class="inline">GenCycle.RecipeBehavior</code>:</p>
+<pre><code class="elixir">defmodule GenCycle.Recipe.MyRecipe do
+@moduledoc false
+
+@behaviour GenCycle.RecipeBehavior
+
+end</code></pre>
+<p>If you check the <code class="inline">RecipeBehavior</code> you will see it requires the following callback function:</p>
+<pre><code class="elixir">@callback start(state, event, message, return) :: :noevent | {:event, event, message} | {:event, event, message, return}</code></pre>
+<p>So lets implement it:</p>
+<pre><code class="elixir">defmodule GenCycle.Recipe.MyRecipe do
+@moduledoc false
+
+require Logger
+
+@behaviour GenCycle.RecipeBehavior
+
+def start(_state, _event, _message, _return) do
+
+  Logger.info &quot;Invoked MyRecipe.start&quot;
+
+  :noevent #return this if there isnt another recipe waiting for this to conclude
+end
+end</code></pre>
+<p>Note the four parameters received:</p>
+<ul>
+<li>state - copy of the owner’s state when this got invoked.
+</li>
+<li>event - event that triggered the start method (e.g., <code class="inline">:event</code>)
+</li>
+<li>message - event message that triggered the start method (e.g., <code class="inline">:done</code>)
+</li>
+<li>return - if the triggering event passed a return value, then it is passed to start via the return parameter. Otherwise the parameter is set as :no_return. We will discuss this later.
+</li>
+</ul>
+<p>Now we have a recipe ready to be registered. 
+Recipes run whenever the event/message combination they are registered to is triggered.
+In this case we want them to run whenever an app is put foreground.</p>
+<p>Note that putting an app in the foreground is in itself a recipe.
+Unlike our <code class="inline">MyRecipe</code>, the <code class="inline">ForegroundRecipe</code> launches an event upon conclusion.
+To do so it returns <code class="inline">{:event, :foreground, :done}</code>.
+This is how recipes are pipelined between them, via returned events. 
+So lets register <code class="inline">MyRecipe</code> to be launched on this event in the <code class="inline">virtual_device.init1</code> of <code class="inline">VirtualDevice</code>:</p>
+<pre><code class="elixir">state = state |&gt; add_recipe(:foreground, :done, Patata.Recipe.MyRecipe)</code></pre>
+<p>Done! Now whenever an app is put on foreground, <code class="inline">MyRecipe</code> executes.</p>
+<h1>Recipe Events</h1>
+<p>With our recipe created and added via <code class="inline">add_recipe3</code> (or <code class="inline">add_recipes3</code>), if we want to launch it ourselves we can do it by launching the event they expect.
+For the previous example it could be achieved by:</p>
+<pre><code class="elixir">state |&gt; launch_event({:foreground, :done})</code></pre>
+<p>In the case of a timed event, one could do:</p>
+<pre><code class="elixir">state |&gt; schedule_event(time_in_ms, {:foreground, :done})</code></pre>
+<p>Occasionally one might want to cancel an event, to do so scheduled events can be named. E.g.:</p>
+<pre><code class="elixir">state |&gt; schedule_event(time_in_ms, {:foreground, :done}, [name: foreground_event_name])</code></pre>
+<p>And canceled using their event name:</p>
+<pre><code class="elixir">state |&gt; cancel_event(foreground_event_name)</code></pre>
+<h1>Pipelining recipes</h1>
+<p>As we have seen, recipes can wait on one another by generating their own events.
+E.g., by returning:</p>
+<pre><code class="elixir">{:event, :your-event, :your-message}</code></pre>
+<p>and registering the recipe on that event and message/status:</p>
+<pre><code class="elixir">state |&gt; add_recipe(:your-event, :your-message, Patata.Recipe.YourRecipe)</code></pre>
+<p>Additionally state can also be passed with the events by returning four fields instead:</p>
+<pre><code class="elixir">{:event, :your-event, :your-message, :your-state}</code></pre>
+<p>Two important notes:</p>
+<ul>
+<li>Both the event and message need to be matchable, i.e., something constant, either an atom or a string.
+</li>
+<li>Recipes’ start method is executed in its own task and its state and return parameters are copies and therefore any change to them is not propagated.
+</li>
+<li>Do not generate atoms automatically since these are not garbage collected. Try to reuse atoms.
+</li>
+</ul>
+<h1>Waiting for recipes</h1>
+<p>In many cases you might want to wait for a few recipes to conclude before launching a new event/recipe.
+To do this we have introduced <code class="inline">gather_events4</code> :</p>
+<pre><code class="elixir">data_events = [ # List of events to be matched
+                {:event_one, :message_one},
+                {:event_two, :message_two}  
+             ]
+
+state
+  |&gt; gather_events(
+      data_events,                    # List of events to be matched
+      {:event_start, :message_start}, # Starts matching events from this event
+      {:event_out, :message_out})     # On matching all events launches this event</code></pre>
+<p>This function waits on the completion of group of recipes by listening to their returning events (as specified by <code class="inline">data_events</code>). 
+It only considering events since the occurrence of a starting event (<code class="inline">event_start</code>) to support repeating gathers over time.
+On successfully matching all the events it launches a completion event that can be used to start other recipes.</p>
+<p>Internally, the <code class="inline">gather_events4</code> function registers a listener on all the awaited events (<code class="inline">data_events</code>). Whenever one of these events occurs, a specialized recipe (<code class="inline">GatherRecipe</code>) checks for the occurrence of the starting event (<code class="inline">event_start</code>) in the event history and tries to match the awaited events in the subsequent events in history.</p>
+<p>Important note: </p>
+<ul>
+<li>If your gather depends on recipes that might fail it is up to you to make sure that either the matching events occur nonetheless, otherwise the gather will never output its event.
+</li>
+</ul>
+
+        </section>
+      
+
+      
+        <section id="summary" class="details-list">
+          <h1 class="section-heading">
+            <a class="hover-link" href="#summary">
+              <span class="icon-link" aria-hidden="true"></span>
+              <span class="sr-only">Link to this section</span>
+            </a>
+            Summary
+          </h1>
+          
+
+          
+  <div class="summary-functions summary">
+    <h2>
+      <a href="#functions">Functions</a>
+    </h2>
+    <div class="summary-row">
+  <div class="summary-signature">
+    <a href="#add_recipe/3">add_recipe(state, arg, action)</a>
+  </div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#add_recipes/3">add_recipes(state, arg, actions)</a>
+  </div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#cancel_all_events/1">cancel_all_events(state)</a>
+  </div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#cancel_event/2">cancel_event(state, name)</a>
+  </div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#drop_events/2">drop_events(state, arg)</a>
+  </div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#event_in_history?/2">event_in_history?(state, event)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Returns true if an event (e.g., {:event,:status}) occurred before</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#gather_all_events/3">gather_all_events(state, event_in, event_out)</a>
+  </div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#gather_events/4">gather_events(state, events, event_start, event_out)</a>
+  </div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#init_recipes/2">init_recipes(state, pid)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Method to be invoked with GenServer state in init1, it adds the required state to run GenCycle</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#launch_event/3">launch_event(state, arg, return \\ :no_return)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Launches an {event, status} that can trigger an existing recipe.
+If your recipe does not require any state invoke launch_event2,
+otherwise launch_event3 can be called, where the third argument
+is the state to be passed to the recipe</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#log_recipes/1">log_recipes(recipes)</a>
+  </div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#on_event/3">on_event(state, arg, return)</a>
+  </div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#schedule_event/4">schedule_event(state, period, arg, options \\ [])</a>
+  </div>
+  
+</div>
+
+  </div>
+
+
+          
+
+        </section>
+      
+
+      
+
+      
+        <section id="functions" class="details-list">
+          <h1 class="section-heading">
+            <a class="hover-link" href="#functions">
+              <span class="icon-link" aria-hidden="true"></span>
+              <span class="sr-only">Link to this section</span>
+            </a>
+            Functions
+          </h1>
+          <div class="detail" id="add_recipe/3">
+  
+  
+  <div class="detail-header">
+    <a href="#add_recipe/3" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <span class="signature">add_recipe(state, arg, action)</span>
+    
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L316" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+    
+    
+    
+  </div>
+  <section class="docstring">
+    
+  </section>
+</div>
+<div class="detail" id="add_recipes/3">
+  
+  
+  <div class="detail-header">
+    <a href="#add_recipes/3" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <span class="signature">add_recipes(state, arg, actions)</span>
+    
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L305" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+    
+    
+    
+  </div>
+  <section class="docstring">
+    
+  </section>
+</div>
+<div class="detail" id="cancel_all_events/1">
+  
+  
+  <div class="detail-header">
+    <a href="#cancel_all_events/1" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <span class="signature">cancel_all_events(state)</span>
+    
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L271" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+    
+    
+    
+  </div>
+  <section class="docstring">
+    
+  </section>
+</div>
+<div class="detail" id="cancel_event/2">
+  
+  
+  <div class="detail-header">
+    <a href="#cancel_event/2" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <span class="signature">cancel_event(state, name)</span>
+    
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L251" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+    
+    
+    
+  </div>
+  <section class="docstring">
+    
+  </section>
+</div>
+<div class="detail" id="drop_events/2">
+  
+  
+  <div class="detail-header">
+    <a href="#drop_events/2" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <span class="signature">drop_events(state, arg)</span>
+    
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L301" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+    
+    
+    
+  </div>
+  <section class="docstring">
+    
+  </section>
+</div>
+<div class="detail" id="event_in_history?/2">
+  
+  
+  <div class="detail-header">
+    <a href="#event_in_history?/2" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <span class="signature">event_in_history?(state, event)</span>
+    
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L215" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+    
+    
+    
+  </div>
+  <section class="docstring">
+    <p>Returns true if an event (e.g., {:event,:status}) occurred before.</p>
+<h2 id="event_in_history?/2-examples" class="section-heading">
+  <a href="#event_in_history?/2-examples" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Examples
+</h2>
+
+<p>iex&gt; event_in_history?(state, {:new_event, :new_status})
+false</p>
+
+  </section>
+</div>
+<div class="detail" id="gather_all_events/3">
+  
+  
+  <div class="detail-header">
+    <a href="#gather_all_events/3" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <span class="signature">gather_all_events(state, event_in, event_out)</span>
+    
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L296" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+    
+    
+    
+  </div>
+  <section class="docstring">
+    
+  </section>
+</div>
+<div class="detail" id="gather_events/4">
+  
+  
+  <div class="detail-header">
+    <a href="#gather_events/4" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <span class="signature">gather_events(state, events, event_start, event_out)</span>
+    
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L280" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+    
+    
+    
+  </div>
+  <section class="docstring">
+    
+  </section>
+</div>
+<div class="detail" id="init_recipes/2">
+  
+  
+  <div class="detail-header">
+    <a href="#init_recipes/2" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <span class="signature">init_recipes(state, pid)</span>
+    
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L179" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+    
+    
+    
+      <div class="specs">
+        
+          <pre>init_recipes(map(), pid()) :: map()</pre>
+        
+      </div>
+    
+  </div>
+  <section class="docstring">
+    <p>Method to be invoked with GenServer state in init1, it adds the required state to run GenCycle.</p>
+<h2 id="init_recipes/2-examples" class="section-heading">
+  <a href="#init_recipes/2-examples" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Examples
+</h2>
+
+<pre><code class="elixir">def init(:ok) do
+  {:ok, init_recipes(%{})}
+end</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="launch_event/3">
+  
+  
+    <span id="launch_event/2"></span>
+  
+  <div class="detail-header">
+    <a href="#launch_event/3" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <span class="signature">launch_event(state, arg, return \\ :no_return)</span>
+    
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L201" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+    
+    
+    
+  </div>
+  <section class="docstring">
+    <p>Launches an {event, status} that can trigger an existing recipe.
+If your recipe does not require any state invoke launch_event2,
+otherwise launch_event3 can be called, where the third argument
+is the state to be passed to the recipe.</p>
+<h2 id="launch_event/3-examples" class="section-heading">
+  <a href="#launch_event/3-examples" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Examples
+</h2>
+
+<p>def handle_cast({:launch_recipe}, state) do
+  {:noreply, launch_event(state, {:new_event, :new_status})
+end</p>
+
+  </section>
+</div>
+<div class="detail" id="log_recipes/1">
+  
+  
+  <div class="detail-header">
+    <a href="#log_recipes/1" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <span class="signature">log_recipes(recipes)</span>
+    
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L417" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+    
+    
+    
+  </div>
+  <section class="docstring">
+    
+  </section>
+</div>
+<div class="detail" id="on_event/3">
+  
+  
+  <div class="detail-header">
+    <a href="#on_event/3" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <span class="signature">on_event(state, arg, return)</span>
+    
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L339" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+    
+    
+    
+  </div>
+  <section class="docstring">
+    
+  </section>
+</div>
+<div class="detail" id="schedule_event/4">
+  
+  
+    <span id="schedule_event/3"></span>
+  
+  <div class="detail-header">
+    <a href="#schedule_event/4" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <span class="signature">schedule_event(state, period, arg, options \\ [])</span>
+    
+      <a href="https://github.com/4knahs/gencycle/blob/master/lib/gencycle.ex#L232" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+    
+    
+    
+  </div>
+  <section class="docstring">
+    
+  </section>
+</div>
+
+        </section>
+      
+
+      
+          <footer class="footer">
+        <p>
+          <span class="line">
+            Built using
+            <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" rel="help" target="_blank">ExDoc</a> (v0.18.1),
+          </span>
+          <span class="line">
+            designed by
+            <a href="https://twitter.com/dignifiedquire" target="_blank" title="@dignifiedquire">Friedel Ziegelmayer</a>.
+            </span>
+        </p>
+        <button class="night-mode-toggle"><span class="sr-only">Switch theme</span></button>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+  <script src="dist/app-778c9ef903.js"></script>
+  
+  
+  
+  
+  </body>
+</html>
+
